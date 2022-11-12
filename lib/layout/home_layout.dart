@@ -6,6 +6,8 @@ import 'package:todo_list/Modules/components/Text_Form_Field.dart';
 import 'package:todo_list/Modules/done_tasks/done_tasks_screen.dart';
 import 'package:todo_list/Modules/new_tasks/new_tasks_screen.dart';
 
+import '../Modules/components/Common_Variables.dart';
+
 class HomeLayout extends StatefulWidget {
   const HomeLayout({Key? key}) : super(key: key);
 
@@ -24,7 +26,6 @@ class _HomeLayoutState extends State<HomeLayout> {
   Icon fabIcon = Icon(Icons.edit);
   var scaffoldKey = GlobalKey<ScaffoldState>();
   var formKey = GlobalKey<FormState>();
-  List<Map> tasks = [];
   List<Widget> screens = [
     NewTasksScreen(),
     const DoneTasksScreen(),
@@ -56,11 +57,16 @@ class _HomeLayoutState extends State<HomeLayout> {
                   if (formKey.currentState!.validate()) {
                     insertToDatabase(title:titleController.text, date:dateController.text,
                         time:timeController.text).then((value) {
-                      Navigator.pop(context);
-                      isBottomSheet = false;
-                      setState(() {
-                        fabIcon = const Icon(Icons.edit);
-                      });
+                          getDataFromDatabase(db).then((value){
+                            Navigator.pop(context);
+                            isBottomSheet = false;
+                            setState(() {
+                              fabIcon = const Icon(Icons.edit);
+                              tasks = value;
+                            });
+
+                          });
+
                     });
                   }
                 } else {
@@ -186,7 +192,7 @@ class _HomeLayoutState extends State<HomeLayout> {
           BottomNavigationBarItem(icon: Icon(Icons.archive), label: 'Archived'),
         ],
       ),
-      body: screens[currentIdx],
+      body: tasks.length==0? Center(child: CircularProgressIndicator()) :screens[currentIdx],
     );
   }
 
@@ -199,7 +205,10 @@ class _HomeLayoutState extends State<HomeLayout> {
       }, onOpen: (database) {
 
         getDataFromDatabase(database).then((value) {
-          tasks = value;
+
+          setState(() {
+            tasks = value;
+          });
         });
           });
     } on Error {
