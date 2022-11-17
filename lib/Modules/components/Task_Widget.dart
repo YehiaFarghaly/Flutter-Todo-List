@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 
 Widget buildTaskItem(Map tasksList) => Container(
-  color: Colors.purple[600],
+  color: Colors.black54,
   child:   Padding(
     padding: const EdgeInsets.all(20.0),
     child: Row(
