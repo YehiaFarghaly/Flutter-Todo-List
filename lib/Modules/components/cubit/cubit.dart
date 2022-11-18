@@ -12,7 +12,9 @@ import '../../new_tasks/new_tasks_screen.dart';
 class TasksCubit extends Cubit<TasksStates>{
   TasksCubit() : super(InitTaskState());
   late Database db;
-  List<Map> tasks=[];
+  List<Map> newTasks=[];
+  List<Map> doneTasks=[];
+  List<Map> archivedTasks=[];
   static TasksCubit get(context) => BlocProvider.of(context);
   int currentIdx = 0;
   List<Widget> screens = [
@@ -35,10 +37,7 @@ class TasksCubit extends Cubit<TasksStates>{
                 'CREATE TABLE tasks (id INTEGER PRIMARY KEY,title TEXT,date TEXT, time TEXT, status TEXT)');
           }, onOpen: (database) {
 
-            getDataFromDatabase(database).then((value) {
-                 tasks = value;
-                 emit(GetFromDatabase());
-            });
+            getDataFromDatabase(database);
           }).then((value) {
             db = value;
             emit(CreateDatabaseState());
@@ -62,19 +61,44 @@ class TasksCubit extends Cubit<TasksStates>{
           textColor: Colors.white,
         );
         emit(InsertToDatabaseState());
-
-        getDataFromDatabase(db).then((value) {
-          tasks = value;
-          emit(GetFromDatabase());
-        });
+        getDataFromDatabase(db);
       }).catchError((error) {
         print("Error while inserting into the table ${error.toString()}");
       });
     });
   }
-  Future<List<Map>> getDataFromDatabase(Database database) async {
-    List<Map> tasks = await database.rawQuery('SELECT * FROM tasks');
-    return tasks;
+  void getDataFromDatabase(Database database)  {
+    newTasks=[];
+    doneTasks=[];
+    archivedTasks=[];
+      database.rawQuery('SELECT * FROM tasks').then((value) {
+        value.forEach((element) {
+          if(element['status']=='new'){
+            newTasks.add(element);
+          }
+          else if(element['status']=='done'){
+            doneTasks.add(element);
+          }
+          else archivedTasks.add(element);
+        });
+        emit(GetFromDatabase());
+      });
+
+  }
+  void updateDatabase(String status,int id) async{
+     db.rawUpdate('UPDATE Tasks SET status = ? WHERE id = ?',
+    [status, '$id'],
+    ).then((value) {
+       getDataFromDatabase(db);
+       emit(UpdateDatabaseState());
+     });
+  }
+
+  void deleteFromDatabase(int id){
+    db.rawDelete('DELETE FROM Tasks WHERE id = $id ').then((value) {
+      getDataFromDatabase(db);
+      emit(DeleteFromDatabaseState());
+    });
   }
 
   bool isBottomSheet = false;

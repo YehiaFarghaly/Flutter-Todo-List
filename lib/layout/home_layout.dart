@@ -48,6 +48,9 @@ class HomeLayout extends StatelessWidget {
                   if (formKey.currentState!.validate()) {
                     cubit.insertToDatabase(title:titleController.text, date:dateController.text,
                         time:timeController.text);
+                    titleController.text = '';
+                    dateController.text='';
+                    timeController.text='';
                   }
                 } else {
                   scaffoldKey.currentState?.showBottomSheet(
@@ -166,7 +169,7 @@ class HomeLayout extends StatelessWidget {
                 BottomNavigationBarItem(icon: Icon(Icons.archive), label: 'Archived'),
               ],
             ),
-            body: cubit.tasks.length==0? Center(child: CircularProgressIndicator()) :cubit.screens[cubit.currentIdx],
+            body: cubit.screens[cubit.currentIdx],
           );
         },
       ),
